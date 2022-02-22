@@ -605,6 +605,12 @@ func (h *BasicHost) RemoveStreamHandler(pid protocol.ID) {
 // to create one. If ProtocolID is "", writes no header.
 // (Threadsafe)
 func (h *BasicHost) NewStream(ctx context.Context, p peer.ID, pids ...protocol.ID) (network.Stream, error) {
+	resolved, err := h.resolveAddrs(ctx, h.Peerstore().PeerInfo(p))
+	if err != nil {
+		return nil, err
+	}
+	h.Peerstore().AddAddrs(p, resolved, peerstore.TempAddrTTL)
+
 	s, err := h.Network().NewStream(ctx, p)
 	if err != nil {
 		return nil, err
