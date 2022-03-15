@@ -605,11 +605,16 @@ func (h *BasicHost) RemoveStreamHandler(pid protocol.ID) {
 // to create one. If ProtocolID is "", writes no header.
 // (Threadsafe)
 func (h *BasicHost) NewStream(ctx context.Context, p peer.ID, pids ...protocol.ID) (network.Stream, error) {
-	resolved, err := h.resolveAddrs(ctx, h.Peerstore().PeerInfo(p))
-	if err != nil {
-		return nil, err
+	// Ensure we have a connection, with peer addresses resolved by the routing system (#207)
+	// It is not sufficient to let the underlying host connect, it will most likely not have
+	// any addresses for the peer without any prior connections.
+	// If the caller wants to prevent the host from dialing, it should use the NoDial option.
+	if nodial, _ := network.GetNoDial(ctx); !nodial {
+		err := h.Connect(ctx, peer.AddrInfo{ID: p})
+		if err != nil {
+			return nil, err
+		}
 	}
-	h.Peerstore().AddAddrs(p, resolved, peerstore.TempAddrTTL)
 
 	s, err := h.Network().NewStream(ctx, p)
 	if err != nil {
