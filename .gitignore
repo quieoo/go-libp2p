@@ -1,4 +1,11 @@
 *.swp
 examples/echo/echo
 examples/multicodecs/multicodecs
+.idea### Example user template template
+### Example user template
+
+# IntelliJ project files
 .idea
+*.iml
+out
+gen
